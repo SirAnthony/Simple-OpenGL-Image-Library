@@ -114,9 +114,24 @@ unsigned int
 		unsigned int flags
 	)
 {
+	int width, height;
+	return SOIL_load_OGL_texture_sized( filename, force_channels, reuse_texture_ID, flags, &width, &height );
+}
+
+unsigned int
+	SOIL_load_OGL_texture_sized
+	(
+		const char *filename,
+		int force_channels,
+		unsigned int reuse_texture_ID,
+		unsigned int flags,
+		int* width,
+		int* height
+	)
+{
 	/*	variables	*/
 	unsigned char* img;
-	int width, height, channels;
+	int channels;
 	unsigned int tex_id;
 	/*	does the user want direct uploading of the image as a DDS file?	*/
 	if( flags & SOIL_FLAG_DDS_LOAD_DIRECT )
@@ -133,7 +148,7 @@ unsigned int
 		}
 	}
 	/*	try to load the image	*/
-	img = SOIL_load_image( filename, &width, &height, &channels, force_channels );
+	img = SOIL_load_image( filename, width, height, &channels, force_channels );
 	/*	channels holds the original number of channels, which may have been forced	*/
 	if( (force_channels >= 1) && (force_channels <= 4) )
 	{
@@ -147,7 +162,7 @@ unsigned int
 	}
 	/*	OK, make it a texture!	*/
 	tex_id = SOIL_internal_create_OGL_texture(
-			img, width, height, channels,
+			img, *width, *height, channels,
 			reuse_texture_ID, flags,
 			GL_TEXTURE_2D, GL_TEXTURE_2D,
 			GL_MAX_TEXTURE_SIZE );
@@ -1163,12 +1178,12 @@ unsigned int
 		*/
 	}
 	/*	create the OpenGL texture ID handle
-    	(note: allowing a forced texture ID lets me reload a texture)	*/
-    tex_id = reuse_texture_ID;
-    if( tex_id == 0 )
-    {
+		(note: allowing a forced texture ID lets me reload a texture)	*/
+	tex_id = reuse_texture_ID;
+	if( tex_id == 0 )
+	{
 		glGenTextures( 1, &tex_id );
-    }
+	}
 	check_for_GL_errors( "glGenTextures" );
 	/* Note: sometimes glGenTextures fails (usually no OpenGL context)	*/
 	if( tex_id )
@@ -1394,12 +1409,12 @@ int
 		return 0;
 	}
 
-    /*  Get the data from OpenGL	*/
-    pixel_data = (unsigned char*)malloc( 3*width*height );
-    glReadPixels (x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
+	/*  Get the data from OpenGL	*/
+	pixel_data = (unsigned char*)malloc( 3*width*height );
+	glReadPixels (x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
 
-    /*	invert the image	*/
-    for( j = 0; j*2 < height; ++j )
+	/*	invert the image	*/
+	for( j = 0; j*2 < height; ++j )
 	{
 		int index1 = j * width * 3;
 		int index2 = (height - 1 - j) * width * 3;
@@ -1413,11 +1428,11 @@ int
 		}
 	}
 
-    /*	save the image	*/
-    save_result = SOIL_save_image( filename, image_type, width, height, 3, pixel_data);
+	/*	save the image	*/
+	save_result = SOIL_save_image( filename, image_type, width, height, 3, pixel_data);
 
-    /*  And free the memory	*/
-    SOIL_free_image_data( pixel_data );
+	/*  And free the memory	*/
+	SOIL_free_image_data( pixel_data );
 	return save_result;
 }
 
